@@ -69,6 +69,7 @@ namespace Utkarsh.HierarchyDemo.SimpleHierarchy
 
         public int ExecCommand(uint itemid, ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (pguidCmdGroup.Equals(VSConstants.GUID_VsUIHierarchyWindowCmds))
             {
                 switch (nCmdID)
@@ -120,6 +121,7 @@ namespace Utkarsh.HierarchyDemo.SimpleHierarchy
 
         public int GetProperty(uint itemid, int propid, out object pvar)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             // GetProperty is called many many times for this particular property
             if (propid != (int)__VSHPROPID.VSHPROPID_ParentHierarchy)
             {
@@ -164,7 +166,7 @@ namespace Utkarsh.HierarchyDemo.SimpleHierarchy
 
                 case (int)__VSHPROPID.VSHPROPID_IconImgList:
                 case (int)__VSHPROPID.VSHPROPID_OpenFolderIconHandle:
-                    pvar = (int)_imageList.Handle;
+                    pvar = _imageList.Handle;
                     break;
 
                 case (int)__VSHPROPID.VSHPROPID_IconIndex:
@@ -195,6 +197,7 @@ namespace Utkarsh.HierarchyDemo.SimpleHierarchy
 
         public int GetSite(out IOleServiceProvider ppSP)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             ppSP = _serviceProvider.GetService(typeof(IOleServiceProvider)) as IOleServiceProvider;
             return VSConstants.S_OK;
         }
@@ -292,6 +295,7 @@ namespace Utkarsh.HierarchyDemo.SimpleHierarchy
 
             public void NavigateTo(string strURL)
             {
+                ThreadHelper.ThrowIfNotOnUIThread();
                 int hr = 0;
 
                 // create a webbrowser instance and tie it to our hierarchy item

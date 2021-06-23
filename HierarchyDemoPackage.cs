@@ -48,6 +48,7 @@ namespace Utkarsh.HierarchyDemo
         }
         public object GetSvc(Type svcType)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             return GetService(svcType);
         }
 
@@ -66,6 +67,7 @@ namespace Utkarsh.HierarchyDemo
             {
                 throw new NotSupportedException(Resources.CanNotCreateWindow);
             }
+            ThreadHelper.ThrowIfNotOnUIThread();
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
         }
@@ -85,6 +87,7 @@ namespace Utkarsh.HierarchyDemo
             base.Initialize();
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
+            ThreadHelper.ThrowIfNotOnUIThread();
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if ( null != mcs )
             {
@@ -108,21 +111,25 @@ namespace Utkarsh.HierarchyDemo
         private void MenuItemCallback(object sender, EventArgs e)
         {
             // Show a Message Box to prove we were here
+            ThreadHelper.ThrowIfNotOnUIThread();
             IVsUIShell uiShell = (IVsUIShell)GetService(typeof(SVsUIShell));
-            Guid clsid = Guid.Empty;
-            int result;
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(
-                       0,
-                       ref clsid,
-                       "HierarchyDemo",
-                       string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.ToString()),
-                       string.Empty,
-                       0,
-                       OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                       OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST,
-                       OLEMSGICON.OLEMSGICON_INFO,
-                       0,        // false
-                       out result));
+            if (null != uiShell)
+            {
+                Guid clsid = Guid.Empty;
+                int result;
+                Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(
+                           0,
+                           ref clsid,
+                           "HierarchyDemo",
+                           string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.ToString()),
+                           string.Empty,
+                           0,
+                           OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                           OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST,
+                           OLEMSGICON.OLEMSGICON_INFO,
+                           0,        // false
+                           out result));
+            }
         }
 
     }

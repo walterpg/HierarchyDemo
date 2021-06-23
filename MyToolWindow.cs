@@ -58,6 +58,7 @@ namespace Utkarsh.HierarchyDemo
                 (uint)__UIHWINFLAGS.UIHWF_ActAsProjectTypeWin;
 
             // Initialize with custom hierarchy
+            ThreadHelper.ThrowIfNotOnUIThread();
             IVsUIHierarchy hierarchy = new SimpleHierarchy.SimpleHierarchy(HierarchyWindow) as IVsUIHierarchy;
             //IVsUIHierarchy hierarchy = new SimpleHierarchy(HierarchyWindow) as IVsUIHierarchy;
             HierarchyWindow.Init(hierarchy, grfUIHWF, out unkObj);
@@ -80,6 +81,7 @@ namespace Utkarsh.HierarchyDemo
         {
             get
             {
+                ThreadHelper.ThrowIfNotOnUIThread();
                 IVsWindowFrame frame = this.Frame as IVsWindowFrame;
                 if (frame != null)
                 {

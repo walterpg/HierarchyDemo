@@ -3,17 +3,21 @@
   <Metadata>
     <Identity Id="2d96c484-eb03-433b-b279-1ee39fa38cd0" Version="1.0" Language="en-US" Publisher="Utkarsh" />
     <DisplayName>HierarchyDemo</DisplayName>
-    <Description>IVsHierarchy demo
-</Description>
+    <Description xml:space="preserve">IVsHierarchy demo</Description>
   </Metadata>
   <Installation InstalledByMsi="false">
-    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[12.0]" />
+	<InstallationTarget Version="[17.0)" Id="Microsoft.VisualStudio.Pro" >
+		<ProductArchitecture>amd64</ProductArchitecture>
+	</InstallationTarget>
   </Installation>
   <Dependencies>
-    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
-    <Dependency Id="Microsoft.VisualStudio.MPF.12.0" DisplayName="Visual Studio MPF 12.0" d:Source="Installed" Version="[12.0]" />
+    <Dependency d:Source="Manual" Version="[4.8)" Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" />
   </Dependencies>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
   </Assets>
+  <Prerequisites>
+    <Prerequisite Id="Microsoft.VisualStudio.ComponentGroup.VisualStudioExtension.Prerequisites" Version="[17.0)" DisplayName="Visual Studio extension development prerequisites" />
+    <Prerequisite Id="Microsoft.VisualStudio.Component.ManagedDesktop.Prerequisites" Version="[17.0)" DisplayName=".NET desktop development tools" />
+  </Prerequisites>
 </PackageManifest>
