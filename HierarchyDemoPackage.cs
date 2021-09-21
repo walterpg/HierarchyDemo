@@ -8,6 +8,9 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Task = System.Threading.Tasks.Task;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Utkarsh.HierarchyDemo
 {
@@ -23,7 +26,7 @@ namespace Utkarsh.HierarchyDemo
     /// </summary>
     // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
     // a package.
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     // This attribute is used to register the information needed to show this package
     // in the Help/About dialog of Visual Studio.
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
@@ -32,7 +35,7 @@ namespace Utkarsh.HierarchyDemo
     // This attribute registers a tool window exposed by this package.
     [ProvideToolWindow(typeof(MyToolWindow))]
     [Guid(GuidList.guidHierarchyDemoPkgString)]
-    public sealed class HierarchyDemoPackage : Package
+    public sealed class HierarchyDemoPackage : AsyncPackage
     {
         public static HierarchyDemoPackage Package;
         /// <summary>
@@ -57,7 +60,7 @@ namespace Utkarsh.HierarchyDemo
         /// tool window. See the Initialize method to see how the menu item is associated to 
         /// this function using the OleMenuCommandService service and the MenuCommand class.
         /// </summary>
-        private void ShowToolWindow(object sender, EventArgs e)
+        private void OLD_ShowToolWindow(object sender, EventArgs e)
         {
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
@@ -72,6 +75,49 @@ namespace Utkarsh.HierarchyDemo
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
         }
 
+        private void ShowToolWindow(object sender, EventArgs e)
+        {
+            _ = JoinableTaskFactory.RunAsync(async () =>
+            {
+                await ShowToolWindowAsync();
+            });
+        }
+
+        internal async Task<int> ShowToolWindowAsync()
+        {
+            MyToolWindow toolWindow = await GetToolWindowAsync();
+            if (toolWindow != await ShowToolWindowAsync(typeof(MyToolWindow),
+                                        0, create: false,
+                                        DisposalToken))
+            {
+                return VSConstants.E_FAIL;
+            }
+            return VSConstants.S_OK;
+        }
+
+        internal async Task<MyToolWindow> GetToolWindowAsync()
+        {
+            WindowPane window = await FindWindowPaneAsync(typeof(MyToolWindow),
+                0, create: true, DisposalToken);
+            MyToolWindow toolWindow = window as MyToolWindow;
+            if (null == toolWindow?.Frame)
+            {
+                await JoinableTaskFactory.SwitchToMainThreadAsync();
+                throw new COMException("CanNotCreateWindow");
+            }
+            return toolWindow;
+        }
+
+        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            if (toolWindowType == typeof(MyToolWindow).GUID)
+            {
+                return this;
+            }
+            return base.GetAsyncToolWindowFactory(toolWindowType);
+        }
+
 
         /////////////////////////////////////////////////////////////////////////////
         // Overridden Package Implementation
@@ -81,14 +127,18 @@ namespace Utkarsh.HierarchyDemo
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
         /// </summary>
-        protected override void Initialize()
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             Debug.WriteLine (string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
-            base.Initialize();
+            await base.InitializeAsync(cancellationToken, progress);
+
+            // When initialized asynchronously, we *may* be on a background thread at this point.
+            // Do any initialization that requires the UI thread after switching to the UI thread.
+            // Otherwise, remove the switch to the UI thread if you don't need it.
+            await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            ThreadHelper.ThrowIfNotOnUIThread();
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            OleMenuCommandService mcs = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
             if ( null != mcs )
             {
                 // Create the command for the menu item.
